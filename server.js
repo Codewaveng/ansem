@@ -122,21 +122,18 @@ app.get('/api/holders', async (req, res) => {
   const addr = TOKEN_ADDR || fromCache('market', 120_000)?.tokenAddress;
 
   if (addr && hasHelius()) {
-    // Helius: paginate all token accounts to get total holder count
+    // Helius getTokenAccounts — returns total count on first page, no full pagination needed
     try {
-      let cursor = undefined, total = 0;
-      for (let page = 0; page < 30; page++) {
-        const body = {
-          jsonrpc: '2.0', id: `p${page}`,
-          method: 'getTokenAccountsByMint',
-          params: { mint: addr, limit: 1000, cursor },
-        };
-        const { data } = await axios.post(heliusRpc(), body, { timeout: 10_000 });
-        const items = data?.result?.token_accounts || [];
-        total += items.filter(a => parseFloat(a.amount) > 0).length;
-        cursor = data?.result?.cursor;
-        if (!cursor || items.length < 1000) break;
-      }
+      const { data } = await axios.post(heliusRpc(), {
+        jsonrpc: '2.0', id: 'holders-total',
+        method: 'getTokenAccounts',
+        params: {
+          page: 1, limit: 1,
+          mint: addr,
+          displayOptions: { showZeroBalance: false },
+        },
+      }, { timeout: 10_000 });
+      const total = data?.result?.total;
       if (total > 0) {
         const r = { holders: total };
         toCache('holders', r);

@@ -11,9 +11,14 @@ const state = {
   lastPost:    null,
 };
 
+// Safe wrapper — never crash if lucide CDN is slow/blocked
+function icons() {
+  try { if (typeof lucide !== 'undefined') icons(); } catch (_) {}
+}
+
 // ── Bootstrap ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  lucide.createIcons();
+  icons();
 
   await loadConfig();
   await Promise.all([loadMarket(), loadHolders()]);
@@ -200,7 +205,7 @@ function renderCalcResult(data, amount, days) {
         <div class="signal-desc">${signal.desc}</div>
       </div>
     </div>`;
-  lucide.createIcons();
+  icons();
 }
 
 function getSignal(roi) {
@@ -251,7 +256,7 @@ function renderTrades(data) {
             <a href="https://solscan.io/tx/${tx.sig}" target="_blank" style="color:var(--muted);font-size:0.8rem;">View</a>
           </div>`).join('')}
       </div>`;
-    lucide.createIcons();
+    icons();
     return;
   }
 
@@ -296,7 +301,7 @@ function renderTrades(data) {
           <div class="tx-total">Total: <strong>${fmtNum(total)}</strong> transactions</div>
         </div>`;
     }).join('');
-    lucide.createIcons();
+    icons();
   }
 }
 
@@ -331,7 +336,7 @@ function renderTopHolders(holders) {
         </a>
       </div>`;
   }).join('');
-  lucide.createIcons();
+  icons();
 }
 
 // ── Post Generator ────────────────────────────────────
@@ -350,7 +355,7 @@ async function generatePost() {
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
   btn.innerHTML = `<i data-lucide="loader" class="btn-icon spin"></i> Generating…`;
-  lucide.createIcons();
+  icons();
 
   try {
     const d = await apiPost('/api/generate-post', {
@@ -363,7 +368,7 @@ async function generatePost() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i data-lucide="sparkles" class="btn-icon"></i> Generate Post`;
-    lucide.createIcons();
+    icons();
   }
 }
 
@@ -380,7 +385,7 @@ function renderPost(text) {
         </button>
       </div>
     </div>`;
-  lucide.createIcons();
+  icons();
 }
 
 window.copyPost = async function () {
@@ -389,10 +394,10 @@ window.copyPost = async function () {
   try {
     await navigator.clipboard.writeText(text);
     const btn = document.querySelector('.btn-copy');
-    if (btn) { btn.innerHTML = '<i data-lucide="check"></i> Copied!'; lucide.createIcons(); }
+    if (btn) { btn.innerHTML = '<i data-lucide="check"></i> Copied!'; icons(); }
     setTimeout(() => {
       const b = document.querySelector('.btn-copy');
-      if (b) { b.innerHTML = '<i data-lucide="copy"></i> Copy'; lucide.createIcons(); }
+      if (b) { b.innerHTML = '<i data-lucide="copy"></i> Copy'; icons(); }
     }, 2000);
   } catch (_) {}
 };
