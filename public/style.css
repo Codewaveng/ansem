@@ -64,8 +64,9 @@ header {
 .header-center { display: flex; justify-content: center; }
 
 .brand { display: flex; align-items: center; gap: 0.6rem; }
-.brand-icon { width: 32px; height: 32px; object-fit: contain; }
+.brand-icon { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; }
 .brand-text { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
+.brand-accent { color: var(--green); }
 
 .bullpen-logo { height: 28px; width: auto; object-fit: contain; }
 
@@ -274,6 +275,38 @@ header {
   padding: 1px 5px;
   border-radius: 4px;
 }
+.helius-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding: 0.9rem 1.1rem;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+.helius-cta-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted-2);
+}
+.helius-cta-text strong { color: var(--text); }
+.helius-cta-btn {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--green);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 6px;
+  padding: 0.35rem 0.8rem;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.helius-cta-btn:hover { background: var(--green); color: #000; }
 .hidden { display: none !important; }
 
 .ansem-logo {

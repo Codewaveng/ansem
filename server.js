@@ -285,48 +285,87 @@ app.get('/api/trades', async (req, res) => {
   res.status(500).json({ error: 'Trade data unavailable' });
 });
 
-// ─── Bull Post Generator ──────────────────────────────────────────────────────
-app.post('/api/generate-post', (req, res) => {
-  const { type = 'bullish', length = 'short' } = req.body;
-  const market = fromCache('market', 300_000) || {};
-  const holders = fromCache('holders', 300_000) || {};
+// ─── Bull Post Generator — no repeats across all users ───────────────────────
+// Track which template index was last served per type. Once all are used, cycle
+// to the next "rotation" (content stays fresh, never serves same post twice in a row).
+const postQueues = {}; // type -> shuffled queue of indices
 
+function getTemplates(type, market, holders) {
   const price   = market.price    ? `$${formatP(market.price)}`    : 'rapidly growing';
   const change  = market.change24h ? `${market.change24h > 0 ? '+' : ''}${market.change24h.toFixed(1)}%` : '';
   const mcap    = market.marketCap  ? formatBig(market.marketCap)   : '';
   const vol     = market.volume24h  ? formatBig(market.volume24h)   : '';
   const holdCnt = holders.holders   ? holders.holders.toLocaleString() : 'hundreds of thousands of';
+  const bullish24 = (market.change24h || 0) > 0;
 
-  const templates = {
+  const all = {
     bullish: [
-      `$ANSEM is one of the most underrated plays on Solana right now. ${price} with ${change} in 24 hours, ${holdCnt} holders, and a community that doesn't quit. The 1 million holder milestone is coming. Are you positioned?`,
+      `$ANSEM is one of the most underrated plays on Solana right now. ${price} with ${change} in 24 hours, ${holdCnt} holders, and a community that doesn't quit. The 1 million holder milestone is closer than most people think.`,
       `The fundamentals of $ANSEM speak for themselves. Market cap ${mcap}, 24h volume ${vol}, and a holder base growing every single day. This is not a trend. This is a movement.`,
-      `I keep coming back to $ANSEM because the conviction here is different. Not a pump and dump. Not a rug. Just consistent growth, a strong community, and a clear path to mass adoption. ${holdCnt} holders already. We're just getting started.`,
-      `What $ANSEM is building is rare in this space — a genuinely loyal holder base. ${price} today. The community is targeting 1 million holders. When that hits, the narrative shifts entirely.`,
+      `I keep coming back to $ANSEM because the conviction here is different. Not a pump and dump. Just consistent growth, a strong community, and a clear path to mass adoption. ${holdCnt} holders already. We're just getting started.`,
+      `What $ANSEM is building is rare — a genuinely loyal holder base. ${price} today. When 1 million holders hits, the narrative changes completely. Most people won't be ready.`,
+      `The $ANSEM chart doesn't lie. ${price}, ${change} in 24h, ${holdCnt} holders. Every metric is pointing in the same direction. Up.`,
+      `Quiet confidence is when you hold $ANSEM at ${price} and don't feel the need to explain yourself to anyone. ${holdCnt} holders feel exactly the same way.`,
+      `The smartest play on Solana right now is $ANSEM. Not because of hype. Because ${holdCnt} people have decided this is the one worth holding. That number is going to 1M.`,
+      `$ANSEM at ${price} with ${mcap} market cap and growing. For the size of this community, the valuation still makes no sense. In a good way.`,
     ],
     fomo: [
-      `You had every chance to buy $ANSEM early. The chart was there. The community was there. It's ${price} right now. Still early compared to where this is going. Don't be the person explaining why you missed it at 10x.`,
-      `$ANSEM is ${price} and still going. ${holdCnt} holders and counting toward 1 million. Every day you wait is a day someone else is buying your future bags. DYOR. The numbers don't lie.`,
-      `People sleep on $ANSEM then wonder why they missed it. Right now: ${price}, ${change} in 24h, ${holdCnt} holders. This is the accumulation phase. It won't feel this cheap forever.`,
+      `You had every chance to buy $ANSEM early. The chart was there. The community was there. It's ${price} now. Still early compared to where this ends up. Don't be the person explaining why you missed it.`,
+      `$ANSEM is ${price} and still going. ${holdCnt} holders and counting toward 1 million. Every day you wait is a day someone else is loading your future bags.`,
+      `People sleep on $ANSEM then wonder why they missed it. Right now: ${price}, ${change} in 24h, ${holdCnt} holders. This is still the accumulation window. It won't feel this early forever.`,
+      `Imagine explaining to yourself in 6 months why you didn't buy $ANSEM at ${price}. With ${holdCnt} holders. With ${vol} in daily volume. With the community that this has. Don't do that to yourself.`,
+      `The last time a Solana community pushed this hard toward 1 million holders it ended in life-changing numbers. $ANSEM is ${price}. ${holdCnt} in. The window doesn't stay open.`,
+      `Some tokens you discover after the run. $ANSEM at ${price} with ${holdCnt} holders is still before the run. That gap is closing. Quickly.`,
     ],
     data: [
-      `$ANSEM on-chain data:\n• Price: ${price} (${change} 24h)\n• Market Cap: ${mcap}\n• 24h Volume: ${vol}\n• Holders: ${holdCnt}\n• Target: 1,000,000 holders\n\nThe numbers are healthy. The community is strong. DYOR.`,
-      `Running the numbers on $ANSEM:\n\nPrice: ${price}\n24h Change: ${change}\nMarket Cap: ${mcap}\nVolume: ${vol}\nHolders: ${holdCnt} (Target: 1M)\n\nFor a community-driven token, these metrics are impressive. Watching this closely.`,
+      `$ANSEM snapshot:\n\n• Price: ${price}\n• 24h: ${change}\n• Market Cap: ${mcap}\n• Volume: ${vol}\n• Holders: ${holdCnt} → 1,000,000\n\nThe numbers are clean. The community is real. DYOR.`,
+      `Running the numbers on $ANSEM:\n\nPrice: ${price} (${change} 24h)\nMarket Cap: ${mcap}\nVolume: ${vol}\nHolders: ${holdCnt} of 1M target\n\nFor a community-driven token at this stage these metrics are strong. Watching closely.`,
+      `$ANSEM data check:\n\nPrice ${price} · MCap ${mcap} · Vol ${vol}\nHolders: ${holdCnt} / 1,000,000 target\n24h: ${change}\n\nNFA. But the on-chain data doesn't lie. This community is building something real.`,
+      `Thread on why $ANSEM metrics matter right now:\n\n1/ Price: ${price} with ${change} momentum\n2/ Volume: ${vol} in 24h — real activity\n3/ Holders: ${holdCnt} with a clear 1M milestone\n4/ Market cap ${mcap} — still room to move\n\nThis is a real project with real metrics. DYOR.`,
     ],
     hodl: [
-      `I don't care what $ANSEM does today, this week, or this month. I care where it is when the 1,000,000th holder joins. I'm holding my position. The community is holding. Diamond hands aren't a meme — they're a strategy.`,
-      `Been holding $ANSEM through every dip. ${holdCnt} holders strong. The community doesn't panic sell. They buy the dip. They hold. They build. That's why this token is different. Not selling until 1M holders.`,
-      `Bought $ANSEM, set a reminder for 1 million holders, and closed the app. ${price} today. Could be 10x by that milestone. Could be more. I'm not here to trade noise. I'm here for the signal.`,
+      `I don't care what $ANSEM does today, this week, or this month. I care where it is when the 1,000,000th holder joins. I'm holding my position. The community is holding. That's the whole strategy.`,
+      `Been holding $ANSEM through every single move. ${holdCnt} holders strong. The community doesn't flinch. They buy dips. They hold. They build. That's why this one is different.`,
+      `Bought $ANSEM. Closed the app. Set a reminder for 1 million holders. ${price} today. Not interested in the noise. Here for the milestone.`,
+      `The $ANSEM thesis is simple: ${holdCnt} people all holding for the same milestone. 1 million holders. When that happens the story changes. I'll still be holding.`,
+      `I've watched a lot of tokens come and go. $ANSEM feels different because the holders feel different. Nobody is panicking. Nobody is dumping. ${holdCnt} addresses and counting. Just holding.`,
+      `My $ANSEM bags are sealed until 1 million holders. ${price} now. Whatever the price is then — that's when I look. Not before. Diamond hands isn't a phrase. It's a commitment.`,
     ],
     degen: [
-      `all in $ANSEM and i'm not even sorry. ${price}. ${change} today. ${holdCnt} holders. the chart goes up. the vibes are immaculate. i will not be taking questions at this time.`,
-      `normies: "what's your strategy?"\nme: $ANSEM.\nnormies: "but what's the plan?"\nme: ${price}. ${holdCnt} holders. 1 million incoming.\nnormies: "that's not a strategy"\nme: it is now.`,
-      `if $ANSEM doesn't make me rich at least i'll have had the best time losing money with the most based community in crypto. ${holdCnt} holders. ${price}. we march to 1M.`,
+      `all in $ANSEM and i refuse to elaborate. ${price}. ${change}. ${holdCnt} holders. we march.`,
+      `normies: "what's your investment strategy?"\nme: $ANSEM\nnormies: "that's not a strategy"\nme: ${price}. ${holdCnt} holders. 1 million incoming.\nnormies: "..."\nme: exactly.`,
+      `if $ANSEM doesn't make me rich i'll have had the best time holding with the most unhinged community in crypto. ${holdCnt} holders. ${price}. we go to 1M or we go broke trying.`,
+      `doctor: "you need to reduce stress"\nme: buys more $ANSEM\ndoctor: "that's the opposite"\nme: ${price}. ${holdCnt} holders. ${change} today. my stress is GONE.`,
+      `just checked my $ANSEM bag. ${price}. ${change} today. ${holdCnt} holders. still not selling. still not stressed. this is the way.`,
+      `$ANSEM is my retirement plan, my vacation fund, my therapy, and my personality. ${price}. ${holdCnt} holders. 1 million is the destination. i am not early. i am on time.`,
     ],
   };
 
-  const pool = templates[type] || templates.bullish;
-  const post = pool[Math.floor(Math.random() * pool.length)];
+  return all[type] || all.bullish;
+}
+
+function pickUniquePost(type, templates) {
+  if (!postQueues[type] || postQueues[type].length === 0) {
+    // Build a fresh shuffled queue of all indices for this type
+    const indices = templates.map((_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    postQueues[type] = indices;
+  }
+  const idx = postQueues[type].shift();
+  return templates[idx];
+}
+
+app.post('/api/generate-post', (req, res) => {
+  const { type = 'bullish' } = req.body;
+  const market  = fromCache('market', 300_000)  || {};
+  const holders = fromCache('holders', 300_000) || {};
+
+  const templates = getTemplates(type, market, holders);
+  const post      = pickUniquePost(type, templates);
 
   res.json({ post, type, generatedAt: Date.now() });
 });
