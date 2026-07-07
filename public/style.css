@@ -1065,6 +1065,22 @@ footer {
   align-self: stretch;
   margin: 0.6rem 0;
 }
+.hms-note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  letter-spacing: 0.02em;
+}
+#hms-today:empty::after,
+#hms-week:empty::after { content: '—'; }
+.hms-val[data-collecting] {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* ── NIGERIA TOUR BANNER ─────────────────────────── */
 .tour-banner {
@@ -1154,9 +1170,65 @@ footer {
   .table-row .t-link { display: none; }
 }
 
+/* ── HAMBURGER ───────────────────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.hamburger:hover { border-color: var(--green); }
+.hamburger span {
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: var(--text-2);
+  border-radius: 2px;
+  transition: all 0.22s;
+  transform-origin: center;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── MOBILE NAV DRAWER ───────────────────────────── */
+.mobile-nav {
+  display: none;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+  background: rgba(8, 12, 9, 0.97);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+.mobile-nav.open { max-height: 320px; }
+.mobile-nav-link {
+  padding: 0.9rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted-2);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+}
+.mobile-nav-link:hover { background: var(--green-dim); color: var(--text); }
+.mobile-nav-tour { color: var(--green); }
+
 /* Tablet — hide nav, keep price chip in header-right */
 @media (max-width: 900px) {
   .header-nav { display: none; }
+  .hamburger  { display: flex; }
+  .mobile-nav { display: flex; }
+  header { overflow: visible; }
 }
 @media (max-width: 720px) {
   .header-inner  { gap: 0.75rem; padding: 0 1rem; }

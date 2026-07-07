@@ -20,6 +20,8 @@ function icons() {
 document.addEventListener('DOMContentLoaded', async () => {
   icons();
 
+  setupHamburger();
+
   await loadConfig();
   await Promise.all([loadMarket(), loadHolders(), loadHolderStats()]);
   loadTopHolders();
@@ -32,6 +34,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(loadHolders, 60_000);
   setInterval(loadTrades,  20_000);
 });
+
+// ── Hamburger menu ──────────────────────────────────
+function setupHamburger() {
+  const btn = document.getElementById('hamburger-btn');
+  const nav = document.getElementById('mobile-nav');
+  if (!btn || !nav) return;
+
+  btn.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    btn.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open);
+  });
+
+  // Close when any mobile nav link is clicked
+  nav.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      nav.classList.remove('open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (!btn.contains(e.target) && !nav.contains(e.target)) {
+      nav.classList.remove('open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
 
 // ── Config ──────────────────────────────────────────
 async function loadConfig() {
@@ -158,10 +191,27 @@ async function loadHolderStats() {
   try {
     const d = await api('/api/holder-stats');
     if (d.loading || d.needsConfig) return;
-    const fmt = n => n == null ? '—' : (n >= 0 ? '+' : '') + fmtNum(n);
+
+    const note = document.getElementById('hms-note');
+
+    if (d.collecting) {
+      setText('hms-today', 'tracking');
+      setText('hms-week',  'tracking');
+      setText('hms-eta',   'tracking');
+      if (note) { note.textContent = 'Collecting history — stats appear after 12h'; note.style.display = ''; }
+      return;
+    }
+
+    const pfx = d.isExtrapolated ? '~' : '';
+    const fmt = n => n == null ? '—' : `${pfx}${n >= 0 ? '+' : ''}${fmtNum(n)}`;
     setText('hms-today', fmt(d.dailyGrowth));
     setText('hms-week',  fmt(d.weeklyGrowth));
     setText('hms-eta',   d.estimatedDays != null ? `~${fmtNum(d.estimatedDays)}` : '—');
+
+    if (note) {
+      if (d.isExtrapolated) { note.textContent = '~ estimated · accuracy improves over 24h'; note.style.display = ''; }
+      else note.style.display = 'none';
+    }
   } catch (_) {}
 }
 

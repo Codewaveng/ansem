@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const axios   = require('axios');
 const path    = require('path');
+const fs      = require('fs');
 
 const app          = express();
 const PORT         = process.env.PORT || 3000;
@@ -124,14 +125,33 @@ app.get('/api/historical', async (req, res) => {
 //
 // Runs in the background every 5 min so the HTTP endpoint is always instant.
 
-const PAGE_SIZE   = 1000;
-const holderHistory = []; // { count, ts } — rolling 8-day snapshot log
+const PAGE_SIZE    = 1000;
+const HISTORY_FILE = path.join(__dirname, 'holder_history.json');
+const holderHistory = [];
+
+function loadHolderHistory() {
+  try {
+    if (fs.existsSync(HISTORY_FILE)) {
+      const arr = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8'));
+      if (Array.isArray(arr)) {
+        const cutoff = Date.now() - 8 * 86_400_000;
+        holderHistory.push(...arr.filter(h => h.ts > cutoff && typeof h.count === 'number'));
+        console.log(`[holders] Loaded ${holderHistory.length} history snapshots from disk`);
+      }
+    }
+  } catch (_) {}
+}
+
+function saveHolderHistory() {
+  try { fs.writeFileSync(HISTORY_FILE, JSON.stringify(holderHistory), 'utf8'); } catch (_) {}
+}
 
 function recordHolderSnapshot(count) {
   const now = Date.now();
   holderHistory.push({ count, ts: now });
   const cutoff = now - 8 * 86_400_000;
   while (holderHistory.length > 1 && holderHistory[0].ts < cutoff) holderHistory.shift();
+  saveHolderHistory();
 }
 
 function computeHolderGrowth() {
@@ -140,6 +160,14 @@ function computeHolderGrowth() {
   const current = cached.holders;
   const now     = Date.now();
 
+  const oldest  = holderHistory[0];
+  const ageDays = (now - oldest.ts) / 86_400_000;
+  if (ageDays < 0.002) return {};
+
+  const growth    = current - oldest.count;
+  const dailyRate = growth / ageDays;
+
+  // Try to find a snapshot closest to exactly 24h ago
   let dailyGrowth = null;
   const t24 = now - 86_400_000;
   let best = null, bestDiff = Infinity;
@@ -148,17 +176,29 @@ function computeHolderGrowth() {
     const d = Math.abs(h.ts - t24);
     if (d < bestDiff) { bestDiff = d; best = h; }
   }
-  if (best && bestDiff < 14_400_000) dailyGrowth = current - best.count;
+  if (best && bestDiff < 14_400_000) {
+    // Exact 24h measurement — show even if negative
+    dailyGrowth = current - best.count;
+  } else if (ageDays >= 0.5 && growth > 0) {
+    // Extrapolated from a window of at least 12h with positive observed growth
+    dailyGrowth = Math.round(dailyRate);
+  }
+  // Suppressed: short noisy windows (< 12h) where growth is 0 or negative
 
-  const oldest  = holderHistory[0];
-  const ageDays = (now - oldest.ts) / 86_400_000;
-  const weeklyGrowth = ageDays >= 5 ? current - oldest.count : null;
+  let weeklyGrowth = null;
+  if (ageDays >= 5) {
+    weeklyGrowth = current - oldest.count;
+  } else if (dailyRate > 0 && ageDays >= 0.5) {
+    weeklyGrowth = Math.round(dailyRate * 7);
+  }
 
-  const rate = dailyGrowth ?? (ageDays > 0 ? (current - oldest.count) / ageDays : 0);
-  const estimatedDays = rate > 0 ? Math.ceil((1_000_000 - current) / rate) : null;
+  const estimatedDays = dailyRate > 0 ? Math.ceil((1_000_000 - current) / dailyRate) : null;
+  const isExtrapolated = ageDays < 1;
 
-  return { dailyGrowth, weeklyGrowth, estimatedDays };
+  return { dailyGrowth, weeklyGrowth, estimatedDays, isExtrapolated };
 }
+
+loadHolderHistory(); // restore snapshots from last run
 
 async function fetchPageLen(addr, page) {
   try {
@@ -230,7 +270,12 @@ app.get('/api/holder-stats', (req, res) => {
   if (!addr || !hasHelius()) return res.json({ holders: 0, needsConfig: true });
   const cached = fromCache('holders', 300_000);
   if (!cached) return res.json({ holders: 0, loading: true });
-  res.json({ holders: cached.holders, ...computeHolderGrowth() });
+  const growth = computeHolderGrowth();
+  // If all growth fields are null and we have < 12h of history, flag as collecting
+  const hasAnyGrowth = growth.dailyGrowth != null || growth.weeklyGrowth != null || growth.estimatedDays != null;
+  const oldestTs = holderHistory[0]?.ts ?? Date.now();
+  const collecting = !hasAnyGrowth && (Date.now() - oldestTs) < 12 * 3_600_000;
+  res.json({ holders: cached.holders, collecting, ...growth });
 });
 
 // ─── Top holders ──────────────────────────────────────────────────────────────

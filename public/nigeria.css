@@ -260,7 +260,11 @@
   .ng-flag-title { flex-direction: column; gap: 0.6rem; }
   .ng-title { text-align: center; }
 }
+@media (max-width: 540px) {
+  .nav-back-text { display: none; }   /* arrow only on small screens */
+}
 @media (max-width: 480px) {
   .ng-stats-grid { grid-template-columns: 1fr 1fr; }
   .states-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .btn-label { display: none; }        /* icon-only Buy button on very small screens */
 }
