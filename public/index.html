@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>$ANSEM — To The Moon 🚀</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Starfield canvas -->
+  <canvas id="stars"></canvas>
+
+  <!-- ── Ticker tape ───────────────────────────────────── -->
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker-inner">
+      <span id="ticker-content">🚀 $ANSEM &nbsp;|&nbsp; loading live data... &nbsp;|&nbsp; 🌕 TO THE MOON &nbsp;|&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ── Navigation ────────────────────────────────────── -->
+  <header>
+    <nav>
+      <div class="nav-logo">$ANSEM 🚀</div>
+      <div class="nav-price-pill" id="nav-price-pill">
+        <span id="nav-price">$0.000000</span>
+        <span id="nav-change" class="change-neutral">+0.00%</span>
+      </div>
+      <a id="join-btn-nav" href="#" target="_blank" class="btn-nav">JOIN ANSEM 🔥</a>
+    </nav>
+  </header>
+
+  <!-- ── HERO ───────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="hero-content">
+      <div class="hero-chain-badge">⚡ SOLANA NETWORK ⚡</div>
+      <h1 class="hero-title">
+        <span class="glitch" data-text="$ANSEM">$ANSEM</span>
+      </h1>
+      <p class="hero-sub">The most based community in all of crypto 🦍🔥</p>
+
+      <div class="hero-stats-row">
+        <div class="hstat">
+          <span class="hstat-label">PRICE</span>
+          <span class="hstat-val" id="hero-price">loading…</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-label">24H CHANGE</span>
+          <span class="hstat-val" id="hero-change">loading…</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-label">MARKET CAP</span>
+          <span class="hstat-val" id="hero-mcap">loading…</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-label">24H VOLUME</span>
+          <span class="hstat-val" id="hero-vol">loading…</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-label">LIQUIDITY</span>
+          <span class="hstat-val" id="hero-liq">loading…</span>
+        </div>
+      </div>
+
+      <!-- Moon-o-meter -->
+      <div class="moonometer" id="moonometer">
+        <span class="moon-label">MOON-O-METER:</span>
+        <span class="moon-emoji" id="moon-emoji">🌑</span>
+        <span class="moon-text" id="moon-text">Loading vibes…</span>
+      </div>
+    </div>
+
+    <div class="hero-rocket-wrap">
+      <div class="hero-rocket">🚀</div>
+      <div class="hero-moon">🌕</div>
+    </div>
+  </section>
+
+  <!-- ── HOLDER COUNTDOWN ────────────────────────────────── -->
+  <section id="countdown">
+    <div class="section-head">
+      <h2>🎯 THE GREAT MARCH TO 1,000,000 HOLDERS</h2>
+      <p class="section-sub">Every ape counts. Let's fill the ranks.</p>
+    </div>
+
+    <div class="countdown-box">
+      <div class="cdown-left">
+        <div class="cdown-number" id="holders-count">
+          <span class="cdown-digits" id="holders-digits">---,---</span>
+          <span class="cdown-unit">CURRENT HOLDERS</span>
+        </div>
+        <div id="holders-config-note" class="config-note" style="display:none">
+          ⚠️ Add HELIUS_API_KEY &amp; ANSEM_TOKEN_ADDRESS to .env for live holder data
+        </div>
+      </div>
+
+      <div class="cdown-bar-wrap">
+        <div class="cdown-bar-track">
+          <div class="cdown-bar-fill" id="cdown-fill" style="width:0%"></div>
+          <div class="cdown-bar-label" id="cdown-pct">0% to 1M</div>
+        </div>
+        <div class="cdown-needed" id="cdown-needed">--- holders to go 🔥</div>
+        <div class="cdown-eta" id="cdown-eta"></div>
+      </div>
+
+      <div class="cdown-right">
+        <div class="cdown-number target">
+          <span class="cdown-digits">1,000,000</span>
+          <span class="cdown-unit">TARGET 🌕</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WEN RICH CALCULATOR ─────────────────────────────── -->
+  <section id="calculator">
+    <div class="section-head">
+      <h2>💰 WEN RICH? CALCULATOR</h2>
+      <p class="section-sub">What if you had bought earlier? 🤑 Find out now.</p>
+    </div>
+
+    <div class="calc-wrap">
+      <div class="calc-input-card">
+        <label class="calc-label">💵 IF I HAD INVESTED…</label>
+        <div class="dollar-input-wrap">
+          <span class="dollar-sign">$</span>
+          <input type="number" id="invest-input" value="100" min="1" step="1" placeholder="100" />
+        </div>
+        <p class="calc-disclaimer">Live prices. Past performance ≠ future results. NFA. 🤡</p>
+      </div>
+
+      <div class="calc-cards-row">
+        <div class="calc-card" id="calc-2d">
+          <div class="calc-card-head">📅 2 Days Ago</div>
+          <div class="calc-row">
+            <span class="calc-key">Invested</span>
+            <span class="calc-val invested-val" id="inv-2d">$100</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-key">Worth Now</span>
+            <span class="calc-val worth-val" id="worth-2d">…</span>
+          </div>
+          <div class="calc-profit-line" id="profit-2d"></div>
+          <div class="calc-react" id="react-2d">🔄</div>
+        </div>
+
+        <div class="calc-card" id="calc-5d">
+          <div class="calc-card-head">📅 5 Days Ago</div>
+          <div class="calc-row">
+            <span class="calc-key">Invested</span>
+            <span class="calc-val invested-val" id="inv-5d">$100</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-key">Worth Now</span>
+            <span class="calc-val worth-val" id="worth-5d">…</span>
+          </div>
+          <div class="calc-profit-line" id="profit-5d"></div>
+          <div class="calc-react" id="react-5d">🔄</div>
+        </div>
+
+        <div class="calc-card" id="calc-30d">
+          <div class="calc-card-head">📅 1 Month Ago</div>
+          <div class="calc-row">
+            <span class="calc-key">Invested</span>
+            <span class="calc-val invested-val" id="inv-30d">$100</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-key">Worth Now</span>
+            <span class="calc-val worth-val" id="worth-30d">…</span>
+          </div>
+          <div class="calc-profit-line" id="profit-30d"></div>
+          <div class="calc-react" id="react-30d">🔄</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TOP HOLDERS LEADERBOARD ──────────────────────────── -->
+  <section id="holders-board">
+    <div class="section-head">
+      <h2>🐳 ANSEM WHALE WATCH</h2>
+      <p class="section-sub">The diamond-handed legends holding $ANSEM strong 💎🙌</p>
+    </div>
+
+    <div class="leaderboard-wrap">
+      <div class="leaderboard-header">
+        <span>RANK</span>
+        <span>WALLET</span>
+        <span>LABEL</span>
+        <span>AMOUNT</span>
+      </div>
+      <div id="leaderboard-rows">
+        <div class="lb-loading">🔄 Scanning the blockchain for whales…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COMMUNITY POSTS ─────────────────────────────────── -->
+  <section id="community">
+    <div class="section-head">
+      <h2>🔥 WHAT THE COMMUNITY IS SAYING</h2>
+      <p class="section-sub">The people have spoken 🦍</p>
+    </div>
+
+    <div class="posts-grid" id="posts-grid">
+      <div class="posts-loading">🔄 Loading the vibes…</div>
+    </div>
+
+    <div style="text-align:center;margin-top:2rem">
+      <button class="btn-shuffle" id="shuffle-btn" onclick="shufflePosts()">🔀 Shuffle Posts</button>
+    </div>
+  </section>
+
+  <!-- ── JOIN CTA ────────────────────────────────────────── -->
+  <section id="join">
+    <div class="cta-wrap">
+      <div class="cta-rockets">🚀🚀🚀</div>
+      <h2 class="cta-title">READY TO JOIN<br/>THE REVOLUTION?</h2>
+      <p class="cta-sub">Become part of the most based community in all of crypto.<br/>1 million holders. We're almost there. Are you in?</p>
+      <a id="join-btn-main" href="#" target="_blank" rel="noopener noreferrer" class="btn-join">
+        🔥 JOIN ANSEM NOW 🔥
+      </a>
+      <div class="cta-nfa">NFA · DYOR · This site is purely for entertainment · Do your own research 🤡</div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ──────────────────────────────────────────── -->
+  <footer>
+    <p>$ANSEM · Built for fun · Live data powered by DexScreener &amp; CoinGecko · 🚀 To The Moon</p>
+    <p style="font-size:0.7rem;opacity:0.4;margin-top:0.4rem">Not financial advice. This is entertainment only.</p>
+  </footer>
+
+  <!-- Money rain overlay (triggered on big profits) -->
+  <div id="money-rain" class="money-rain hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
