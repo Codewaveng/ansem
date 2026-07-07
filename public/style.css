@@ -60,9 +60,8 @@ header {
   justify-content: space-between;
   gap: 1.5rem;
 }
-.header-left, .header-right { flex: 1; }
-.header-right { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
-.header-center { display: flex; justify-content: center; }
+.header-left  { flex-shrink: 0; }
+.header-right { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; flex-shrink: 0; }
 
 .brand { display: flex; align-items: center; gap: 0.6rem; }
 .brand-icon { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; }
@@ -174,8 +173,8 @@ header {
   font-size: 1.1rem;
   color: var(--muted-2);
   font-weight: 400;
-  margin-bottom: 3rem;
-  max-width: 480px;
+  margin-bottom: 2rem;
+  max-width: 520px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -467,6 +466,32 @@ input[type="number"]::placeholder { color: var(--muted); }
   color: var(--green);
   font-weight: 700;
 }
+
+.custom-days-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.6rem;
+}
+.custom-days-label {
+  font-size: 0.83rem;
+  color: var(--muted-2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.custom-days-input {
+  width: 72px;
+  padding: 0.42rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: var(--font);
+  transition: border-color 0.15s;
+}
+.custom-days-input:focus { outline: none; border-color: var(--green); }
+.custom-days-suffix { font-size: 0.78rem; color: var(--muted); }
 
 .btn-calc {
   display: flex;
@@ -925,6 +950,200 @@ footer {
   50%       { opacity: 0.4; }
 }
 
+/* ── NAV LINKS ───────────────────────────────────── */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 1;
+  justify-content: center;
+}
+.nav-link {
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted-2);
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nav-link:hover { color: var(--text); background: var(--green-dim); }
+.nav-tour {
+  color: var(--green);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  font-weight: 600;
+}
+.nav-tour:hover { background: rgba(34, 197, 94, 0.12); }
+
+/* ── HERO CTA BUTTONS ────────────────────────────── */
+.hero-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2rem;
+  background: var(--green);
+  color: #000;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 10px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-hero-primary:hover {
+  background: var(--green-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35);
+}
+.btn-hero-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.8rem;
+  background: transparent;
+  color: var(--muted-2);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--border-2);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-hero-ghost:hover {
+  color: var(--text);
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.btn-hero-icon { width: 16px; height: 16px; }
+
+/* ── HOLDER MINI-STATS ───────────────────────────── */
+.holder-mini-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-top: 1.4rem;
+  background: rgba(34, 197, 94, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.hms {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.8rem 0.5rem;
+  gap: 0.2rem;
+  transition: background 0.15s;
+}
+.hms:hover { background: var(--green-dim); }
+.hms-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.hms-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.hms-sep {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+  margin: 0.6rem 0;
+}
+
+/* ── NIGERIA TOUR BANNER ─────────────────────────── */
+.tour-banner {
+  background: linear-gradient(90deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.04) 100%);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+  padding: 0.7rem 2rem;
+}
+.tour-banner-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  justify-content: center;
+}
+.tour-flag { font-size: 1.2rem; flex-shrink: 0; }
+.tour-text {
+  font-size: 0.88rem;
+  color: var(--muted-2);
+  line-height: 1.4;
+}
+.tour-text strong { color: var(--text); }
+.tour-sub { color: var(--muted); }
+.tour-cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--green);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.tour-cta-link:hover { background: var(--green); color: #000; }
+.tour-arrow { width: 13px; height: 13px; }
+
+/* ── POST TYPE GRID IMPROVEMENTS ─────────────────── */
+.type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+.type-emoji { font-size: 0.9rem; }
+
+/* ── SHARE TO X BUTTON ───────────────────────────── */
+.btn-share-x {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  transition: all 0.18s;
+}
+.btn-share-x:hover { background: #1a1a1a; border-color: rgba(255,255,255,0.3); }
+.btn-share-x svg { width: 14px; height: 14px; }
+
+/* ── CHARACTER COUNTER ───────────────────────────── */
+.char-counter {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: right;
+  margin-top: -0.5rem;
+}
+.char-counter.warn { color: #fbbf24; }
+.char-counter.over { color: var(--red); }
+
 /* ── RESPONSIVE ──────────────────────────────────── */
 @media (max-width: 900px) {
   .calc-grid { grid-template-columns: 1fr; }
@@ -935,12 +1154,13 @@ footer {
   .table-row .t-link { display: none; }
 }
 
-/* Tablet — hide price chip, shrink header */
+/* Tablet — hide nav, keep price chip in header-right */
+@media (max-width: 900px) {
+  .header-nav { display: none; }
+}
 @media (max-width: 720px) {
-  .header-center { display: none; }
   .header-inner  { gap: 0.75rem; padding: 0 1rem; }
-  .header-left, .header-right { flex: unset; }
-  .header-left   { flex: 1; }                 /* brand takes remaining space */
+  .price-chip    { display: none; }
 }
 
 /* Mobile — hide Bullpen logo, compact button */

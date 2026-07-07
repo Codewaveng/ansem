@@ -3,7 +3,17 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GO ANSEM — The March to 1M Holders</title>
+  <title>GO ANSEM — The March to 1M Holders | Live $ANSEM Dashboard</title>
+  <meta name="description" content="Track the $ANSEM march to 1,000,000 holders. Live price, whale tracker, returns calculator, and AI post generator — the community hub for $ANSEM on Solana."/>
+  <meta property="og:title" content="GO ANSEM — The March to 1M Holders"/>
+  <meta property="og:description" content="Live $ANSEM data, holder progress, whale tracker, returns calculator, and AI-powered community tools."/>
+  <meta property="og:image" content="/ansem.jpg"/>
+  <meta property="og:url" content="https://goansem.xyz"/>
+  <meta property="og:type" content="website"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="GO ANSEM — The March to 1M Holders"/>
+  <meta name="twitter:description" content="Track live $ANSEM holder progress, whale wallets, returns calculator, and more."/>
+  <meta name="twitter:image" content="/ansem.jpg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -21,24 +31,44 @@
         </a>
       </div>
 
-      <div class="header-center">
+      <nav class="header-nav">
+        <a href="#calculator" class="nav-link">Calculator</a>
+        <a href="#transactions" class="nav-link">Activity</a>
+        <a href="#holders" class="nav-link">Whales</a>
+        <a href="#post-gen" class="nav-link">Post Gen</a>
+        <a href="/nigeria.html" class="nav-link nav-tour" title="Nigeria Tour">🇳🇬</a>
+      </nav>
+
+      <div class="header-right">
         <div class="price-chip" id="header-price-chip">
           <span id="h-price">—</span>
           <span class="price-badge" id="h-change">—</span>
         </div>
-      </div>
-
-      <div class="header-right">
         <img src="/bullpen.jpg" alt="Bullpen" class="bullpen-logo" id="bullpen-logo"/>
         <a href="#" id="join-btn" target="_blank" rel="noopener" class="btn-primary">
           <i data-lucide="external-link" class="btn-icon"></i>
-          Join Ansem
+          Buy $ANSEM
         </a>
       </div>
     </div>
   </header>
 
-  <!-- ── HERO: HOLDER COUNTDOWN ──────────────────── -->
+  <!-- ── NIGERIA TOUR BANNER ─────────────────────── -->
+  <div class="tour-banner" id="tour-banner">
+    <div class="tour-banner-inner">
+      <span class="tour-flag">🇳🇬</span>
+      <div class="tour-text">
+        <strong>$ANSEM Nigeria Tour</strong>
+        <span class="tour-sub"> — The trenches are the heart of memecoins. Going IRL across all 36 states to prove it.</span>
+      </div>
+      <a href="/nigeria.html" class="tour-cta-link">
+        Follow the Tour
+        <i data-lucide="arrow-right" class="tour-arrow"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── HERO ──────────────────────────────────── -->
   <section id="hero">
     <div class="hero-inner">
       <div class="hero-eyebrow">
@@ -46,8 +76,23 @@
         Live on Solana · $ANSEM
       </div>
 
-      <h1 class="hero-title"><span class="accent">GO ANSEM</span></h1>
-      <p class="hero-sub">The march to <strong>1,000,000 holders</strong> — the largest community in Solana memecoins. Be part of history.</p>
+      <h1 class="hero-title">
+        The March to<br>
+        <span class="accent">1,000,000</span> Holders
+      </h1>
+
+      <p class="hero-sub">The largest community movement in Solana memecoins. Track live on-chain data, calculate your returns, and be part of history.</p>
+
+      <div class="hero-ctas">
+        <a href="#" id="join-btn-hero" target="_blank" rel="noopener" class="btn-hero-primary">
+          <i data-lucide="zap" class="btn-hero-icon"></i>
+          Buy $ANSEM on Bullpen
+        </a>
+        <a href="#calculator" class="btn-hero-ghost">
+          Explore Dashboard
+          <i data-lucide="chevron-down" class="btn-hero-icon"></i>
+        </a>
+      </div>
 
       <!-- Holder progress block -->
       <div class="holder-block">
@@ -73,6 +118,24 @@
           </div>
         </div>
 
+        <!-- Growth velocity stats -->
+        <div class="holder-mini-stats" id="holder-mini-stats">
+          <div class="hms">
+            <span class="hms-val" id="hms-today">—</span>
+            <span class="hms-label">New Today</span>
+          </div>
+          <div class="hms-sep"></div>
+          <div class="hms">
+            <span class="hms-val" id="hms-week">—</span>
+            <span class="hms-label">This Week</span>
+          </div>
+          <div class="hms-sep"></div>
+          <div class="hms">
+            <span class="hms-val" id="hms-eta">—</span>
+            <span class="hms-label">Days to 1M</span>
+          </div>
+        </div>
+
         <div id="holder-config-note" class="helius-cta hidden">
           <div class="helius-cta-text">
             <i data-lucide="link" style="width:15px;height:15px;flex-shrink:0"></i>
@@ -82,7 +145,6 @@
         </div>
       </div>
 
-      <!-- ANSEM token image -->
       <img src="/ansem.jpg" alt="ANSEM" class="ansem-logo" id="ansem-img"/>
     </div>
   </section>
@@ -151,7 +213,6 @@
       <p class="section-sub">Enter your investment amount, choose a time period, and see exactly what you'd have today — with a market signal.</p>
 
       <div class="calc-grid">
-        <!-- Inputs -->
         <div class="calc-inputs">
           <div class="form-group">
             <label class="form-label">Investment Amount</label>
@@ -168,7 +229,12 @@
               <button class="period-btn" data-days="7">1 Week</button>
               <button class="period-btn" data-days="14">2 Weeks</button>
               <button class="period-btn" data-days="30">1 Month</button>
-              <button class="period-btn" data-days="90">3 Months</button>
+              <button class="period-btn" data-days="60">2 Months</button>
+            </div>
+            <div class="custom-days-row">
+              <span class="custom-days-label">Custom:</span>
+              <input type="number" id="custom-days" min="1" max="60" placeholder="e.g. 3" class="custom-days-input"/>
+              <span class="custom-days-suffix">days &nbsp;(max 60)</span>
             </div>
           </div>
           <button class="btn-calc" id="calc-btn">
@@ -177,7 +243,6 @@
           </button>
         </div>
 
-        <!-- Result -->
         <div class="calc-result" id="calc-result">
           <div class="result-placeholder">
             <i data-lucide="arrow-right-circle" class="result-icon-big"></i>
@@ -241,19 +306,44 @@
         <i data-lucide="pen-line" class="section-label-icon"></i>
         Community Tools
       </div>
-      <h2 class="section-title">Bull Post Generator</h2>
-      <p class="section-sub">Generate a positive $ANSEM post to share on X — powered by live market data.</p>
+      <h2 class="section-title">AI Bull Post Generator</h2>
+      <p class="section-sub">Generate a unique $ANSEM post powered by live market data and DeepSeek AI — never the same post twice.</p>
 
       <div class="gen-grid">
         <div class="gen-controls">
           <div class="form-group">
             <label class="form-label">Post Type</label>
             <div class="type-grid">
-              <button class="type-btn active" data-type="bullish">Bullish</button>
-              <button class="type-btn" data-type="fomo">FOMO</button>
-              <button class="type-btn" data-type="data">Data Drop</button>
-              <button class="type-btn" data-type="hodl">HODL</button>
-              <button class="type-btn" data-type="degen">Degen</button>
+              <button class="type-btn active" data-type="bullish">
+                <span class="type-emoji">📈</span> Bullish
+              </button>
+              <button class="type-btn" data-type="fomo">
+                <span class="type-emoji">🔥</span> FOMO
+              </button>
+              <button class="type-btn" data-type="data">
+                <span class="type-emoji">📊</span> Data Drop
+              </button>
+              <button class="type-btn" data-type="hodl">
+                <span class="type-emoji">💎</span> HODL
+              </button>
+              <button class="type-btn" data-type="degen">
+                <span class="type-emoji">🎰</span> Degen
+              </button>
+              <button class="type-btn" data-type="meme">
+                <span class="type-emoji">😂</span> Meme
+              </button>
+              <button class="type-btn" data-type="conviction">
+                <span class="type-emoji">🧠</span> Conviction
+              </button>
+              <button class="type-btn" data-type="reply">
+                <span class="type-emoji">⚡</span> Reply Guy
+              </button>
+              <button class="type-btn" data-type="thread">
+                <span class="type-emoji">🧵</span> Thread Hook
+              </button>
+              <button class="type-btn" data-type="cta">
+                <span class="type-emoji">🚀</span> CTA
+              </button>
             </div>
           </div>
           <button class="btn-generate" id="gen-btn">
@@ -277,7 +367,7 @@
     <div class="cta-inner">
       <img src="/bullpen.jpg" alt="Bullpen" class="cta-logo"/>
       <h2 class="cta-title">Trade $ANSEM on Bullpen</h2>
-      <p class="cta-sub">Join thousands of holders. Buy, sell, and track $ANSEM through Bullpen — the home of ANSEM trading.</p>
+      <p class="cta-sub">Join the march to 1,000,000 holders. Buy, sell, and track $ANSEM through Bullpen — the home of ANSEM trading.</p>
       <a href="#" id="join-btn-2" target="_blank" rel="noopener" class="btn-cta">
         Open Bullpen App
         <i data-lucide="arrow-right" class="btn-icon-right"></i>
@@ -291,16 +381,18 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <img src="/bull-logo.jpeg" alt="Bull" class="footer-icon"/>
-        $ANSEM
+        <span>GO $ANSEM</span>
       </div>
       <div class="footer-links">
         <a href="#hero">Holders</a>
         <a href="#calculator">Calculator</a>
         <a href="#transactions">Activity</a>
-        <a href="#post-gen">Generate Post</a>
+        <a href="#holders">Whales</a>
+        <a href="#post-gen">Post Gen</a>
+        <a href="/nigeria.html">🇳🇬 Nigeria Tour</a>
       </div>
       <div class="footer-right">
-        Data: DexScreener · CoinGecko · Solana
+        Data: DexScreener · CoinGecko · Helius
       </div>
     </div>
   </footer>

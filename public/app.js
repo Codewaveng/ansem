@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   icons();
 
   await loadConfig();
-  await Promise.all([loadMarket(), loadHolders()]);
+  await Promise.all([loadMarket(), loadHolders(), loadHolderStats()]);
   loadTopHolders();
   loadTrades();
 
@@ -38,8 +38,10 @@ async function loadConfig() {
   try {
     const d = await api('/api/config');
     if (d.joinLink) {
-      document.getElementById('join-btn').href   = d.joinLink;
-      document.getElementById('join-btn-2').href = d.joinLink;
+      document.getElementById('join-btn').href      = d.joinLink;
+      document.getElementById('join-btn-2').href    = d.joinLink;
+      const hero = document.getElementById('join-btn-hero');
+      if (hero) hero.href = d.joinLink;
     }
   } catch (_) {}
 }
@@ -151,15 +153,44 @@ function renderHolderBlock(d) {
   setText('holders-needed', `${fmtNum(needed)} to go`);
 }
 
+// ── Holder Stats (daily growth, ETA) ─────────────────
+async function loadHolderStats() {
+  try {
+    const d = await api('/api/holder-stats');
+    if (d.loading || d.needsConfig) return;
+    const fmt = n => n == null ? '—' : (n >= 0 ? '+' : '') + fmtNum(n);
+    setText('hms-today', fmt(d.dailyGrowth));
+    setText('hms-week',  fmt(d.weeklyGrowth));
+    setText('hms-eta',   d.estimatedDays != null ? `~${fmtNum(d.estimatedDays)}` : '—');
+  } catch (_) {}
+}
+
 // ── Calculator ───────────────────────────────────────
 function setupCalculator() {
+  const customInput = document.getElementById('custom-days');
+
   document.querySelectorAll('.period-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.selectedDays = parseInt(btn.dataset.days);
+      if (customInput) customInput.value = '';
     });
   });
+
+  if (customInput) {
+    customInput.addEventListener('input', () => {
+      let v = parseInt(customInput.value);
+      if (!v || v < 1) return;
+      if (v > 60) { v = 60; customInput.value = 60; }
+      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+      state.selectedDays = v;
+    });
+    customInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') updateCalculatorResult();
+    });
+  }
+
   document.getElementById('calc-btn').addEventListener('click', updateCalculatorResult);
   document.getElementById('calc-amount').addEventListener('keydown', e => {
     if (e.key === 'Enter') updateCalculatorResult();
@@ -258,7 +289,7 @@ function fmtPeriodLabel(days) {
   if (days === 7)  return '1 week ago';
   if (days === 14) return '2 weeks ago';
   if (days === 30) return '1 month ago';
-  if (days === 90) return '3 months ago';
+  if (days === 60) return '2 months ago';
   return `${days} days ago`;
 }
 
@@ -407,12 +438,19 @@ async function generatePost() {
 }
 
 function renderPost(text) {
+  const len     = text.length;
+  const cntCls  = len > 280 ? 'over' : len > 240 ? 'warn' : '';
+  const cntTxt  = `${len} / 280 characters`;
   document.getElementById('gen-output').innerHTML = `
     <div class="post-output">
       <div class="post-text">${escHtml(text)}</div>
+      <div class="char-counter ${cntCls}">${cntTxt}</div>
       <div class="post-actions">
         <button class="btn-copy" onclick="copyPost()">
           <i data-lucide="copy"></i> Copy
+        </button>
+        <button class="btn-share-x" onclick="shareToX()">
+          <i data-lucide="share-2"></i> Share on X
         </button>
         <button class="btn-regen" onclick="generatePost()">
           <i data-lucide="refresh-cw"></i> Regenerate
@@ -421,6 +459,13 @@ function renderPost(text) {
     </div>`;
   icons();
 }
+
+window.shareToX = function () {
+  const text = document.querySelector('.post-text')?.innerText;
+  if (!text) return;
+  const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text);
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
 
 window.copyPost = async function () {
   const text = document.querySelector('.post-text')?.innerText;

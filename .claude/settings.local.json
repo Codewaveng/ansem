@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/generate-post -H \"Content-Type: application/json\" -d '{\"type\":\"meme\"}')",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['source'],':',d['post'][:100]\\)\")",
+      "Bash(curl -s -X POST http://localhost:3001/api/generate-post -H \"Content-Type: application/json\" -d '{\"type\":\"thread\"}')",
+      "Bash(curl -s -X POST http://localhost:3001/api/generate-post -H \"Content-Type: application/json\" -d '{\"type\":\"reply\"}')"
     ]
   }
 }

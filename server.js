@@ -124,7 +124,41 @@ app.get('/api/historical', async (req, res) => {
 //
 // Runs in the background every 5 min so the HTTP endpoint is always instant.
 
-const PAGE_SIZE = 1000;
+const PAGE_SIZE   = 1000;
+const holderHistory = []; // { count, ts } — rolling 8-day snapshot log
+
+function recordHolderSnapshot(count) {
+  const now = Date.now();
+  holderHistory.push({ count, ts: now });
+  const cutoff = now - 8 * 86_400_000;
+  while (holderHistory.length > 1 && holderHistory[0].ts < cutoff) holderHistory.shift();
+}
+
+function computeHolderGrowth() {
+  const cached = fromCache('holders', 600_000);
+  if (!cached?.holders || holderHistory.length < 2) return {};
+  const current = cached.holders;
+  const now     = Date.now();
+
+  let dailyGrowth = null;
+  const t24 = now - 86_400_000;
+  let best = null, bestDiff = Infinity;
+  for (const h of holderHistory) {
+    if (h.count === current) continue;
+    const d = Math.abs(h.ts - t24);
+    if (d < bestDiff) { bestDiff = d; best = h; }
+  }
+  if (best && bestDiff < 14_400_000) dailyGrowth = current - best.count;
+
+  const oldest  = holderHistory[0];
+  const ageDays = (now - oldest.ts) / 86_400_000;
+  const weeklyGrowth = ageDays >= 5 ? current - oldest.count : null;
+
+  const rate = dailyGrowth ?? (ageDays > 0 ? (current - oldest.count) / ageDays : 0);
+  const estimatedDays = rate > 0 ? Math.ceil((1_000_000 - current) / rate) : null;
+
+  return { dailyGrowth, weeklyGrowth, estimatedDays };
+}
 
 async function fetchPageLen(addr, page) {
   try {
@@ -169,6 +203,7 @@ async function refreshHolderCount() {
     const total = await countHolders(addr);
     if (total > 0) {
       toCache('holders', { holders: total });
+      recordHolderSnapshot(total);
       console.log(`[holders] ${total.toLocaleString()} holders`);
     }
   } catch (e) {
@@ -188,6 +223,14 @@ app.get('/api/holders', (req, res) => {
   if (cached) return res.json(cached);
 
   res.json({ holders: 0, loading: true });           // still counting on first boot
+});
+
+app.get('/api/holder-stats', (req, res) => {
+  const addr = TOKEN_ADDR || fromCache('market', 3_600_000)?.tokenAddress;
+  if (!addr || !hasHelius()) return res.json({ holders: 0, needsConfig: true });
+  const cached = fromCache('holders', 300_000);
+  if (!cached) return res.json({ holders: 0, loading: true });
+  res.json({ holders: cached.holders, ...computeHolderGrowth() });
 });
 
 // ─── Top holders ──────────────────────────────────────────────────────────────
@@ -306,11 +349,16 @@ app.get('/api/trades', async (req, res) => {
 // Fallback: shuffled template queue if AI is unavailable.
 
 const TYPE_PROMPTS = {
-  bullish: 'Write a confident, bullish post expressing strong conviction about $ANSEM. Sound like a real crypto holder, not a marketing bot. Direct and authentic.',
-  fomo:    'Write a FOMO-inducing post that makes the reader feel like they are missing a big opportunity with $ANSEM. Urgent, real, relatable.',
-  data:    'Write a data-focused post presenting the $ANSEM market stats in a compelling way. Use bullet points or structured format. Analytical but exciting. Add NFA disclaimer.',
-  hodl:    'Write a HODL/diamond-hands post expressing long-term conviction in $ANSEM and loyalty to the 1M holder mission. Patient and resolute.',
-  degen:   'Write a degen-style post about $ANSEM. Chaotic, funny, lowercase energy. Unhinged but loveable. No corporate speak at all.',
+  bullish:    'Write a confident, bullish post expressing strong conviction about $ANSEM. Sound like a real crypto holder, not a marketing bot. Direct and authentic.',
+  fomo:       'Write a FOMO-inducing post that makes the reader feel like they are missing a big opportunity with $ANSEM. Urgent, real, relatable.',
+  data:       'Write a data-focused post presenting the $ANSEM market stats in a compelling way. Use bullet points or structured format. Analytical but exciting. Add NFA disclaimer.',
+  hodl:       'Write a HODL/diamond-hands post expressing long-term conviction in $ANSEM and loyalty to the 1M holder mission. Patient and resolute.',
+  degen:      'Write a degen-style post about $ANSEM. Chaotic, funny, lowercase energy. Unhinged but loveable. No corporate speak at all.',
+  meme:       'Write a meme-style post about $ANSEM. Use viral internet formats like "POV:", "me:", "nobody:". Relatable crypto humor, shareable and funny. Max 3 lines.',
+  conviction: 'Write a conviction post about $ANSEM — deep long-term thesis, not just price. Explain WHY the 1M holder milestone matters. Thoughtful and inspiring, no hype.',
+  reply:      'Write a short reply-guy post for $ANSEM. Max 2 sentences. The kind of response that gets likes under crypto influencer posts. Sharp, witty, confident.',
+  thread:     'Write the opening hook tweet for a Twitter/X thread about $ANSEM. Format it starting with "1/ 🧵". Strong, bold, intriguing — makes people click to read more.',
+  cta:        'Write a call-to-action post urging people to buy $ANSEM or join the community now. Direct, energetic, creates urgency around the 1M holder milestone. Include the holder count.',
 };
 
 async function generateWithDeepSeek(type, market, holders) {
@@ -402,6 +450,33 @@ function getTemplates(type, market, holders) {
       `The $ANSEM thesis is simple: ${holdCnt} people all holding for the same milestone. 1 million holders. When that happens the story changes. I'll still be holding.`,
       `I've watched a lot of tokens come and go. $ANSEM feels different because the holders feel different. Nobody is panicking. Nobody is dumping. ${holdCnt} addresses and counting. Just holding.`,
       `My $ANSEM bags are sealed until 1 million holders. ${price} now. Whatever the price is then — that's when I look. Not before. Diamond hands isn't a phrase. It's a commitment.`,
+    ],
+    meme: [
+      `POV: you bought $ANSEM at ${price} and now you have ${holdCnt} friends you've never met. we're all gonna make it.`,
+      `nobody:\nme at 3am: checking $ANSEM holder count for the 47th time. ${holdCnt}. refreshing. ${holdCnt}. refreshing. we're closer.`,
+      `the $ANSEM community when the holder count goes up by 1000:\n\n🥹🥹🥹\n\n${holdCnt} strong. the march continues.`,
+      `my therapist: what are you obsessing over?\nme: there are ${holdCnt} people holding $ANSEM and we need 1,000,000\nmy therapist: and how does that make you feel\nme: like buying more`,
+    ],
+    conviction: [
+      `The $ANSEM thesis isn't complicated. ${holdCnt} people decided this was worth holding. When that becomes 1,000,000, the network effect changes everything. I'm not here for the trade. I'm here for the milestone.`,
+      `What actually matters in crypto long-term is community density. $ANSEM has ${holdCnt} real holders, a clear goal, and a community that doesn't flinch. That combination is rare. Hold accordingly.`,
+      `Every great community token had a moment where it seemed unlikely. $ANSEM is at ${holdCnt} holders. The people who don't sell between here and 1M will understand something the market hasn't priced in yet.`,
+    ],
+    reply: [
+      `${holdCnt} holders and still early. you'll understand eventually.`,
+      `while you were sleeping, $ANSEM added more holders. ${holdCnt} and counting to 1M.`,
+      `${price} today. check back when we hit 1M holders. you're going to wish you remembered this tweet.`,
+      `the community doesn't sleep. ${holdCnt} holders. 1M is inevitable.`,
+    ],
+    thread: [
+      `1/ 🧵 I've spent the last week studying $ANSEM on-chain data. What I found changed how I think about this token. Thread:`,
+      `1/ 🧵 Most people don't understand what happens when a memecoin hits 1,000,000 holders. $ANSEM is ${holdCnt} away from finding out. Here's why this matters:`,
+      `1/ 🧵 The $ANSEM holder count just hit ${holdCnt}. I want to explain why this number is more important than the price. Thread:`,
+    ],
+    cta: [
+      `${holdCnt} people are already holding $ANSEM. The question isn't whether to buy — it's whether you want to be in before 1,000,000. Buy on Bullpen. Join the march.`,
+      `The $ANSEM community is at ${holdCnt} holders. We're building to 1,000,000. If you're not in yet, today is the day. Don't let this be the one you watched from the sideline.`,
+      `Join ${holdCnt} holders on the march to 1M. $ANSEM is live on Solana. Buy on Bullpen. Be part of something that doesn't happen twice.`,
     ],
     degen: [
       `all in $ANSEM and i refuse to elaborate. ${price}. ${change}. ${holdCnt} holders. we march.`,
