@@ -5,9 +5,10 @@ const path    = require('path');
 
 const app          = express();
 const PORT         = process.env.PORT || 3000;
-const HELIUS_KEY   = process.env.HELIUS_API_KEY || '';
-const TOKEN_ADDR   = process.env.ANSEM_TOKEN_ADDRESS || '';
-const JOIN_LINK    = process.env.JOIN_LINK || 'https://app.bullpen.fi/';
+const HELIUS_KEY    = process.env.HELIUS_API_KEY  || '';
+const DEEPSEEK_KEY  = process.env.DEEPSEEK_API_KEY || '';
+const TOKEN_ADDR    = process.env.ANSEM_TOKEN_ADDRESS || '';
+const JOIN_LINK     = process.env.JOIN_LINK || 'https://app.bullpen.fi/';
 
 const _cache = {};
 function fromCache(key, maxMs) {
@@ -16,8 +17,9 @@ function fromCache(key, maxMs) {
 }
 function toCache(key, data) { _cache[key] = { data, ts: Date.now() }; }
 
-const heliusRpc = () => `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
-const hasHelius = () => HELIUS_KEY && HELIUS_KEY !== 'your_helius_api_key_here';
+const heliusRpc  = () => `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const hasHelius  = () => HELIUS_KEY   && HELIUS_KEY   !== 'your_helius_api_key_here';
+const hasDeepSeek = () => DEEPSEEK_KEY && DEEPSEEK_KEY !== 'your_deepseek_api_key_here';
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -114,64 +116,78 @@ app.get('/api/historical', async (req, res) => {
   res.status(500).json({ error: 'Historical data unavailable' });
 });
 
-// ─── Holder count ─────────────────────────────────────────────────────────────
-app.get('/api/holders', async (req, res) => {
-  const cached = fromCache('holders', 60_000);
+// ─── Holder count — binary search across getTokenAccounts pages ───────────────
+//
+// Helius getTokenAccounts returns `total` = count on *current page*, not global total.
+// So we binary-search page numbers to find the last non-empty page, then:
+//   total_holders = (lastPage - 1) * PAGE_SIZE + itemsOnLastPage
+//
+// Runs in the background every 5 min so the HTTP endpoint is always instant.
+
+const PAGE_SIZE = 1000;
+
+async function fetchPageLen(addr, page) {
+  try {
+    const { data } = await axios.post(heliusRpc(), {
+      jsonrpc: '2.0', id: `hp${page}`,
+      method: 'getTokenAccounts',
+      params: {
+        page,
+        limit: PAGE_SIZE,
+        mint: addr,
+        displayOptions: { showZeroBalance: false },
+      },
+    }, { timeout: 15_000 });
+    return (data?.result?.token_accounts || []).length;
+  } catch (_) { return 0; }
+}
+
+async function countHolders(addr) {
+  const c1 = await fetchPageLen(addr, 1);
+  if (c1 === 0) return 0;
+  if (c1 < PAGE_SIZE) return c1;
+
+  // Binary search: find last page that still has results
+  let lo = 1, hi = 5000;          // 5000 pages × 1000 = supports up to 5M holders
+  let lastPage = 1, lastCount = c1;
+
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    const c   = await fetchPageLen(addr, mid);
+    if (c > 0) { lo = mid; lastPage = mid; lastCount = c; }
+    else          hi = mid - 1;
+  }
+
+  return (lastPage - 1) * PAGE_SIZE + lastCount;
+}
+
+async function refreshHolderCount() {
+  const addr = TOKEN_ADDR || fromCache('market', 3_600_000)?.tokenAddress;
+  if (!addr || !hasHelius()) return;
+  try {
+    console.log('[holders] counting via binary search...');
+    const total = await countHolders(addr);
+    if (total > 0) {
+      toCache('holders', { holders: total });
+      console.log(`[holders] ${total.toLocaleString()} holders`);
+    }
+  } catch (e) {
+    console.error('[holders] error:', e.message);
+  }
+}
+
+// Kick off 8 s after server start, then refresh every 5 min
+setTimeout(refreshHolderCount, 8_000);
+setInterval(refreshHolderCount,  300_000);
+
+app.get('/api/holders', (req, res) => {
+  const addr = TOKEN_ADDR || fromCache('market', 3_600_000)?.tokenAddress;
+  if (!addr || !hasHelius()) return res.json({ holders: 0, needsConfig: true });
+
+  const cached = fromCache('holders', 300_000);      // serve cache up to 5 min old
   if (cached) return res.json(cached);
 
-  const addr = TOKEN_ADDR || fromCache('market', 120_000)?.tokenAddress;
-
-  if (addr && hasHelius()) {
-    // Helius getTokenAccounts — returns total count on first page, no full pagination needed
-    try {
-      const { data } = await axios.post(heliusRpc(), {
-        jsonrpc: '2.0', id: 'holders-total',
-        method: 'getTokenAccounts',
-        params: {
-          page: 1, limit: 1,
-          mint: addr,
-          displayOptions: { showZeroBalance: false },
-        },
-      }, { timeout: 10_000 });
-      const total = data?.result?.total;
-      if (total > 0) {
-        const r = { holders: total };
-        toCache('holders', r);
-        return res.json(r);
-      }
-    } catch (_) {}
-
-    // Fallback: getTokenLargestAccounts (gives top 20 only, estimates total)
-    try {
-      const { data } = await axios.post(heliusRpc(), {
-        jsonrpc: '2.0', id: 'la',
-        method: 'getTokenLargestAccounts',
-        params: [addr, { commitment: 'finalized' }],
-      }, { timeout: 8000 });
-      if (data?.result?.value?.length) {
-        const r = { holders: data.result.value.length, isEstimate: true };
-        toCache('holders', r);
-        return res.json(r);
-      }
-    } catch (_) {}
-  }
-
-  // Try Solscan public API (no key needed)
-  if (addr) {
-    try {
-      const { data } = await axios.get(
-        `https://public-api.solscan.io/token/holders?tokenAddress=${addr}&limit=1&offset=0`,
-        { timeout: 6000, headers: { 'Accept': 'application/json' } }
-      );
-      if (data?.total) {
-        const r = { holders: data.total };
-        toCache('holders', r);
-        return res.json(r);
-      }
-    } catch (_) {}
-  }
-
-  res.json({ holders: 0, needsConfig: true });
+  res.json({ holders: 0, loading: true });           // still counting on first boot
 });
 
 // ─── Top holders ──────────────────────────────────────────────────────────────
@@ -285,9 +301,65 @@ app.get('/api/trades', async (req, res) => {
   res.status(500).json({ error: 'Trade data unavailable' });
 });
 
-// ─── Bull Post Generator — no repeats across all users ───────────────────────
-// Track which template index was last served per type. Once all are used, cycle
-// to the next "rotation" (content stays fresh, never serves same post twice in a row).
+// ─── Bull Post Generator ──────────────────────────────────────────────────────
+// Primary: DeepSeek AI generates a fresh unique post on every request.
+// Fallback: shuffled template queue if AI is unavailable.
+
+const TYPE_PROMPTS = {
+  bullish: 'Write a confident, bullish post expressing strong conviction about $ANSEM. Sound like a real crypto holder, not a marketing bot. Direct and authentic.',
+  fomo:    'Write a FOMO-inducing post that makes the reader feel like they are missing a big opportunity with $ANSEM. Urgent, real, relatable.',
+  data:    'Write a data-focused post presenting the $ANSEM market stats in a compelling way. Use bullet points or structured format. Analytical but exciting. Add NFA disclaimer.',
+  hodl:    'Write a HODL/diamond-hands post expressing long-term conviction in $ANSEM and loyalty to the 1M holder mission. Patient and resolute.',
+  degen:   'Write a degen-style post about $ANSEM. Chaotic, funny, lowercase energy. Unhinged but loveable. No corporate speak at all.',
+};
+
+async function generateWithDeepSeek(type, market, holders) {
+  const price   = market.price     ? `$${formatP(market.price)}`                                        : 'N/A';
+  const change  = market.change24h ? `${market.change24h > 0 ? '+' : ''}${market.change24h.toFixed(1)}%` : 'N/A';
+  const mcap    = market.marketCap  ? formatBig(market.marketCap)                                        : 'N/A';
+  const vol     = market.volume24h  ? formatBig(market.volume24h)                                        : 'N/A';
+  const holdCnt = holders.holders   ? holders.holders.toLocaleString()                                   : 'hundreds of thousands of';
+
+  const { data } = await axios.post(
+    'https://api.deepseek.com/chat/completions',
+    {
+      model: 'deepseek-chat',
+      temperature: 1.3,   // high variety — every post genuinely different
+      max_tokens: 320,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a genuine $ANSEM holder on Solana posting on X (Twitter). ' +
+            'Write authentic crypto community posts — never sound like a press release or bot. ' +
+            'Use the live market data given. ' +
+            'Return ONLY the post text. No intro, no quotes, no explanation.',
+        },
+        {
+          role: 'user',
+          content:
+            `Live $ANSEM data right now:\n` +
+            `• Price: ${price}\n` +
+            `• 24h change: ${change}\n` +
+            `• Market cap: ${mcap}\n` +
+            `• 24h volume: ${vol}\n` +
+            `• Holders: ${holdCnt} (target: 1,000,000)\n\n` +
+            `Task: ${TYPE_PROMPTS[type] || TYPE_PROMPTS.bullish}\n\n` +
+            `Write the post now.`,
+        },
+      ],
+    },
+    {
+      headers: { Authorization: `Bearer ${DEEPSEEK_KEY}`, 'Content-Type': 'application/json' },
+      timeout: 20_000,
+    }
+  );
+
+  const text = data?.choices?.[0]?.message?.content?.trim();
+  return text || null;
+}
+
+// Template fallback — no repeats across all users
 const postQueues = {}; // type -> shuffled queue of indices
 
 function getTemplates(type, market, holders) {
@@ -359,15 +431,25 @@ function pickUniquePost(type, templates) {
   return templates[idx];
 }
 
-app.post('/api/generate-post', (req, res) => {
+app.post('/api/generate-post', async (req, res) => {
   const { type = 'bullish' } = req.body;
   const market  = fromCache('market', 300_000)  || {};
   const holders = fromCache('holders', 300_000) || {};
 
+  // Primary: DeepSeek AI — truly unique every time
+  if (hasDeepSeek()) {
+    try {
+      const post = await generateWithDeepSeek(type, market, holders);
+      if (post) return res.json({ post, type, generatedAt: Date.now(), source: 'ai' });
+    } catch (e) {
+      console.warn('[post-gen] DeepSeek error:', e.message);
+    }
+  }
+
+  // Fallback: shuffled templates
   const templates = getTemplates(type, market, holders);
   const post      = pickUniquePost(type, templates);
-
-  res.json({ post, type, generatedAt: Date.now() });
+  res.json({ post, type, generatedAt: Date.now(), source: 'template' });
 });
 
 function formatP(p) {

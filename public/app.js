@@ -13,7 +13,7 @@ const state = {
 
 // Safe wrapper — never crash if lucide CDN is slow/blocked
 function icons() {
-  try { if (typeof lucide !== 'undefined') icons(); } catch (_) {}
+  try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (_) {}
 }
 
 // ── Bootstrap ──────────────────────────────────────
@@ -96,7 +96,41 @@ async function loadHolders() {
   }
 }
 
+let _holderPollTimer = null;
+
 function renderHolderBlock(d) {
+  // Background job still counting — show loading state and retry
+  if (d.loading) {
+    setText('holder-count', 'Counting…');
+    setText('progress-pct', '—');
+    setText('holders-needed', 'Scanning blockchain…');
+    document.getElementById('holder-config-note').classList.add('hidden');
+    document.getElementById('progress-fill').style.width = '0%';
+    document.getElementById('holder-count').classList.add('counting');
+
+    if (!_holderPollTimer) {
+      _holderPollTimer = setInterval(async () => {
+        try {
+          const d2 = await api('/api/holders');
+          if (!d2.loading) {
+            clearInterval(_holderPollTimer);
+            _holderPollTimer = null;
+            state.holders = d2;
+            renderHolderBlock(d2);
+          }
+        } catch (_) {}
+      }, 5000);
+    }
+    return;
+  }
+
+  // Got real data — cancel any pending poll
+  if (_holderPollTimer) {
+    clearInterval(_holderPollTimer);
+    _holderPollTimer = null;
+  }
+  document.getElementById('holder-count').classList.remove('counting');
+
   const count  = d.holders || 0;
   const target = 1_000_000;
   const pct    = Math.min((count / target) * 100, 100);
