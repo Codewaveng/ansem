@@ -1,239 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>$ANSEM — To The Moon 🚀</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>$ANSEM — The March to 1M Holders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <!-- Starfield canvas -->
-  <canvas id="stars"></canvas>
+  <!-- ── HEADER ──────────────────────────────────── -->
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="/" class="brand">
+          <img src="/bull-logo.png" alt="Bull" class="brand-icon" id="bull-logo" onerror="this.style.display='none'"/>
+          <span class="brand-text">$ANSEM</span>
+        </a>
+      </div>
 
-  <!-- ── Ticker tape ───────────────────────────────────── -->
-  <div class="ticker-wrap">
-    <div class="ticker" id="ticker-inner">
-      <span id="ticker-content">🚀 $ANSEM &nbsp;|&nbsp; loading live data... &nbsp;|&nbsp; 🌕 TO THE MOON &nbsp;|&nbsp;</span>
+      <div class="header-center">
+        <div class="price-chip" id="header-price-chip">
+          <span id="h-price">—</span>
+          <span class="price-badge" id="h-change">—</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <img src="/bullpen-logo.png" alt="Bullpen" class="bullpen-logo" id="bullpen-logo" onerror="this.style.display='none'"/>
+        <a href="#" id="join-btn" target="_blank" rel="noopener" class="btn-primary">
+          <i data-lucide="external-link" class="btn-icon"></i>
+          Join Ansem
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── HERO: HOLDER COUNTDOWN ──────────────────── -->
+  <section id="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        Live on Solana
+      </div>
+
+      <h1 class="hero-title">The March to<br/><span class="accent">1,000,000</span> Holders</h1>
+      <p class="hero-sub">The largest community in Solana memecoins. Be part of history.</p>
+
+      <!-- Holder progress block -->
+      <div class="holder-block">
+        <div class="holder-numbers">
+          <div class="holder-stat">
+            <span class="holder-big" id="holder-count">—</span>
+            <span class="holder-label">Current Holders</span>
+          </div>
+          <div class="holder-divider"></div>
+          <div class="holder-stat right">
+            <span class="holder-big accent">1,000,000</span>
+            <span class="holder-label">Target</span>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="progress-pct">0%</span>
+            <span id="holders-needed">— to go</span>
+          </div>
+        </div>
+
+        <div id="holder-config-note" class="config-note hidden">
+          <i data-lucide="info" style="width:14px;height:14px;"></i>
+          Add <code>HELIUS_API_KEY</code> to .env for live holder count
+        </div>
+      </div>
+
+      <!-- ANSEM token image -->
+      <img src="/ansem-logo.png" alt="ANSEM" class="ansem-logo" id="ansem-img" onerror="this.style.display='none'"/>
+    </div>
+  </section>
+
+  <!-- ── LIVE STATS STRIP ─────────────────────────── -->
+  <div class="stats-strip" id="stats-strip">
+    <div class="stats-strip-inner">
+      <div class="sstat">
+        <i data-lucide="dollar-sign" class="sstat-icon"></i>
+        <div>
+          <div class="sstat-label">Price</div>
+          <div class="sstat-val" id="s-price">—</div>
+        </div>
+      </div>
+      <div class="sstat-sep"></div>
+      <div class="sstat">
+        <i data-lucide="trending-up" class="sstat-icon"></i>
+        <div>
+          <div class="sstat-label">24h Change</div>
+          <div class="sstat-val" id="s-change">—</div>
+        </div>
+      </div>
+      <div class="sstat-sep"></div>
+      <div class="sstat">
+        <i data-lucide="bar-chart-2" class="sstat-icon"></i>
+        <div>
+          <div class="sstat-label">Market Cap</div>
+          <div class="sstat-val" id="s-mcap">—</div>
+        </div>
+      </div>
+      <div class="sstat-sep"></div>
+      <div class="sstat">
+        <i data-lucide="activity" class="sstat-icon"></i>
+        <div>
+          <div class="sstat-label">24h Volume</div>
+          <div class="sstat-val" id="s-vol">—</div>
+        </div>
+      </div>
+      <div class="sstat-sep"></div>
+      <div class="sstat">
+        <i data-lucide="droplets" class="sstat-icon"></i>
+        <div>
+          <div class="sstat-label">Liquidity</div>
+          <div class="sstat-val" id="s-liq">—</div>
+        </div>
+      </div>
+      <div class="sstat-sep"></div>
+      <div class="sstat">
+        <i data-lucide="repeat-2" class="sstat-icon"></i>
+        <div>
+          <div class="sstat-label">24h Transactions</div>
+          <div class="sstat-val" id="s-txns">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ── Navigation ────────────────────────────────────── -->
-  <header>
-    <nav>
-      <div class="nav-logo">$ANSEM 🚀</div>
-      <div class="nav-price-pill" id="nav-price-pill">
-        <span id="nav-price">$0.000000</span>
-        <span id="nav-change" class="change-neutral">+0.00%</span>
+  <!-- ── CALCULATOR ───────────────────────────────── -->
+  <section id="calculator" class="section">
+    <div class="section-inner">
+      <div class="section-label">
+        <i data-lucide="calculator" class="section-label-icon"></i>
+        Returns Calculator
       </div>
-      <a id="join-btn-nav" href="#" target="_blank" class="btn-nav">JOIN ANSEM 🔥</a>
-    </nav>
-  </header>
+      <h2 class="section-title">What If You Had Bought Earlier?</h2>
+      <p class="section-sub">Enter your investment amount, choose a time period, and see exactly what you'd have today — with a market signal.</p>
 
-  <!-- ── HERO ───────────────────────────────────────────── -->
-  <section id="hero">
-    <div class="hero-content">
-      <div class="hero-chain-badge">⚡ SOLANA NETWORK ⚡</div>
-      <h1 class="hero-title">
-        <span class="glitch" data-text="$ANSEM">$ANSEM</span>
-      </h1>
-      <p class="hero-sub">The most based community in all of crypto 🦍🔥</p>
+      <div class="calc-grid">
+        <!-- Inputs -->
+        <div class="calc-inputs">
+          <div class="form-group">
+            <label class="form-label">Investment Amount</label>
+            <div class="input-row">
+              <span class="input-prefix">$</span>
+              <input type="number" id="calc-amount" value="100" min="1" placeholder="100"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time Period</label>
+            <div class="period-grid">
+              <button class="period-btn active" data-days="2">2 Days</button>
+              <button class="period-btn" data-days="5">5 Days</button>
+              <button class="period-btn" data-days="7">1 Week</button>
+              <button class="period-btn" data-days="14">2 Weeks</button>
+              <button class="period-btn" data-days="30">1 Month</button>
+              <button class="period-btn" data-days="90">3 Months</button>
+            </div>
+          </div>
+          <button class="btn-calc" id="calc-btn">
+            <i data-lucide="zap" class="btn-icon"></i>
+            Calculate Returns
+          </button>
+        </div>
 
-      <div class="hero-stats-row">
-        <div class="hstat">
-          <span class="hstat-label">PRICE</span>
-          <span class="hstat-val" id="hero-price">loading…</span>
-        </div>
-        <div class="hstat">
-          <span class="hstat-label">24H CHANGE</span>
-          <span class="hstat-val" id="hero-change">loading…</span>
-        </div>
-        <div class="hstat">
-          <span class="hstat-label">MARKET CAP</span>
-          <span class="hstat-val" id="hero-mcap">loading…</span>
-        </div>
-        <div class="hstat">
-          <span class="hstat-label">24H VOLUME</span>
-          <span class="hstat-val" id="hero-vol">loading…</span>
-        </div>
-        <div class="hstat">
-          <span class="hstat-label">LIQUIDITY</span>
-          <span class="hstat-val" id="hero-liq">loading…</span>
-        </div>
-      </div>
-
-      <!-- Moon-o-meter -->
-      <div class="moonometer" id="moonometer">
-        <span class="moon-label">MOON-O-METER:</span>
-        <span class="moon-emoji" id="moon-emoji">🌑</span>
-        <span class="moon-text" id="moon-text">Loading vibes…</span>
-      </div>
-    </div>
-
-    <div class="hero-rocket-wrap">
-      <div class="hero-rocket">🚀</div>
-      <div class="hero-moon">🌕</div>
-    </div>
-  </section>
-
-  <!-- ── HOLDER COUNTDOWN ────────────────────────────────── -->
-  <section id="countdown">
-    <div class="section-head">
-      <h2>🎯 THE GREAT MARCH TO 1,000,000 HOLDERS</h2>
-      <p class="section-sub">Every ape counts. Let's fill the ranks.</p>
-    </div>
-
-    <div class="countdown-box">
-      <div class="cdown-left">
-        <div class="cdown-number" id="holders-count">
-          <span class="cdown-digits" id="holders-digits">---,---</span>
-          <span class="cdown-unit">CURRENT HOLDERS</span>
-        </div>
-        <div id="holders-config-note" class="config-note" style="display:none">
-          ⚠️ Add HELIUS_API_KEY &amp; ANSEM_TOKEN_ADDRESS to .env for live holder data
-        </div>
-      </div>
-
-      <div class="cdown-bar-wrap">
-        <div class="cdown-bar-track">
-          <div class="cdown-bar-fill" id="cdown-fill" style="width:0%"></div>
-          <div class="cdown-bar-label" id="cdown-pct">0% to 1M</div>
-        </div>
-        <div class="cdown-needed" id="cdown-needed">--- holders to go 🔥</div>
-        <div class="cdown-eta" id="cdown-eta"></div>
-      </div>
-
-      <div class="cdown-right">
-        <div class="cdown-number target">
-          <span class="cdown-digits">1,000,000</span>
-          <span class="cdown-unit">TARGET 🌕</span>
+        <!-- Result -->
+        <div class="calc-result" id="calc-result">
+          <div class="result-placeholder">
+            <i data-lucide="arrow-right-circle" class="result-icon-big"></i>
+            <p>Select a period and click Calculate</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── WEN RICH CALCULATOR ─────────────────────────────── -->
-  <section id="calculator">
-    <div class="section-head">
-      <h2>💰 WEN RICH? CALCULATOR</h2>
-      <p class="section-sub">What if you had bought earlier? 🤑 Find out now.</p>
-    </div>
-
-    <div class="calc-wrap">
-      <div class="calc-input-card">
-        <label class="calc-label">💵 IF I HAD INVESTED…</label>
-        <div class="dollar-input-wrap">
-          <span class="dollar-sign">$</span>
-          <input type="number" id="invest-input" value="100" min="1" step="1" placeholder="100" />
-        </div>
-        <p class="calc-disclaimer">Live prices. Past performance ≠ future results. NFA. 🤡</p>
+  <!-- ── LIVE TRANSACTIONS ─────────────────────────── -->
+  <section id="transactions" class="section section-alt">
+    <div class="section-inner">
+      <div class="section-label">
+        <i data-lucide="zap" class="section-label-icon"></i>
+        On-Chain Activity
       </div>
+      <h2 class="section-title">Live Trading Activity</h2>
+      <p class="section-sub">Real-time $ANSEM transaction data from the Solana blockchain.</p>
 
-      <div class="calc-cards-row">
-        <div class="calc-card" id="calc-2d">
-          <div class="calc-card-head">📅 2 Days Ago</div>
-          <div class="calc-row">
-            <span class="calc-key">Invested</span>
-            <span class="calc-val invested-val" id="inv-2d">$100</span>
-          </div>
-          <div class="calc-row">
-            <span class="calc-key">Worth Now</span>
-            <span class="calc-val worth-val" id="worth-2d">…</span>
-          </div>
-          <div class="calc-profit-line" id="profit-2d"></div>
-          <div class="calc-react" id="react-2d">🔄</div>
-        </div>
-
-        <div class="calc-card" id="calc-5d">
-          <div class="calc-card-head">📅 5 Days Ago</div>
-          <div class="calc-row">
-            <span class="calc-key">Invested</span>
-            <span class="calc-val invested-val" id="inv-5d">$100</span>
-          </div>
-          <div class="calc-row">
-            <span class="calc-key">Worth Now</span>
-            <span class="calc-val worth-val" id="worth-5d">…</span>
-          </div>
-          <div class="calc-profit-line" id="profit-5d"></div>
-          <div class="calc-react" id="react-5d">🔄</div>
-        </div>
-
-        <div class="calc-card" id="calc-30d">
-          <div class="calc-card-head">📅 1 Month Ago</div>
-          <div class="calc-row">
-            <span class="calc-key">Invested</span>
-            <span class="calc-val invested-val" id="inv-30d">$100</span>
-          </div>
-          <div class="calc-row">
-            <span class="calc-key">Worth Now</span>
-            <span class="calc-val worth-val" id="worth-30d">…</span>
-          </div>
-          <div class="calc-profit-line" id="profit-30d"></div>
-          <div class="calc-react" id="react-30d">🔄</div>
+      <div class="tx-grid" id="tx-grid">
+        <div class="tx-loading">
+          <i data-lucide="loader" class="spin"></i>
+          Loading on-chain data…
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── TOP HOLDERS LEADERBOARD ──────────────────────────── -->
-  <section id="holders-board">
-    <div class="section-head">
-      <h2>🐳 ANSEM WHALE WATCH</h2>
-      <p class="section-sub">The diamond-handed legends holding $ANSEM strong 💎🙌</p>
-    </div>
-
-    <div class="leaderboard-wrap">
-      <div class="leaderboard-header">
-        <span>RANK</span>
-        <span>WALLET</span>
-        <span>LABEL</span>
-        <span>AMOUNT</span>
+  <!-- ── TOP HOLDERS ──────────────────────────────── -->
+  <section id="holders" class="section">
+    <div class="section-inner">
+      <div class="section-label">
+        <i data-lucide="users" class="section-label-icon"></i>
+        Whale Tracker
       </div>
-      <div id="leaderboard-rows">
-        <div class="lb-loading">🔄 Scanning the blockchain for whales…</div>
+      <h2 class="section-title">Top $ANSEM Holders</h2>
+      <p class="section-sub">The largest wallets holding $ANSEM on Solana.</p>
+
+      <div class="table-wrap">
+        <div class="table-head">
+          <span>Rank</span>
+          <span>Wallet</span>
+          <span class="right">Amount</span>
+          <span class="right">Actions</span>
+        </div>
+        <div id="holders-rows">
+          <div class="table-loading">
+            <i data-lucide="loader" class="spin"></i>
+            Scanning blockchain…
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ── COMMUNITY POSTS ─────────────────────────────────── -->
-  <section id="community">
-    <div class="section-head">
-      <h2>🔥 WHAT THE COMMUNITY IS SAYING</h2>
-      <p class="section-sub">The people have spoken 🦍</p>
-    </div>
+  <!-- ── BULL POST GENERATOR ──────────────────────── -->
+  <section id="post-gen" class="section section-alt">
+    <div class="section-inner">
+      <div class="section-label">
+        <i data-lucide="pen-line" class="section-label-icon"></i>
+        Community Tools
+      </div>
+      <h2 class="section-title">Bull Post Generator</h2>
+      <p class="section-sub">Generate a positive $ANSEM post to share on X — powered by live market data.</p>
 
-    <div class="posts-grid" id="posts-grid">
-      <div class="posts-loading">🔄 Loading the vibes…</div>
-    </div>
+      <div class="gen-grid">
+        <div class="gen-controls">
+          <div class="form-group">
+            <label class="form-label">Post Type</label>
+            <div class="type-grid">
+              <button class="type-btn active" data-type="bullish">Bullish</button>
+              <button class="type-btn" data-type="fomo">FOMO</button>
+              <button class="type-btn" data-type="data">Data Drop</button>
+              <button class="type-btn" data-type="hodl">HODL</button>
+              <button class="type-btn" data-type="degen">Degen</button>
+            </div>
+          </div>
+          <button class="btn-generate" id="gen-btn">
+            <i data-lucide="sparkles" class="btn-icon"></i>
+            Generate Post
+          </button>
+        </div>
 
-    <div style="text-align:center;margin-top:2rem">
-      <button class="btn-shuffle" id="shuffle-btn" onclick="shufflePosts()">🔀 Shuffle Posts</button>
+        <div class="gen-output" id="gen-output">
+          <div class="output-placeholder">
+            <i data-lucide="message-square" class="result-icon-big"></i>
+            <p>Choose a type and click Generate</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- ── JOIN CTA ────────────────────────────────────────── -->
-  <section id="join">
-    <div class="cta-wrap">
-      <div class="cta-rockets">🚀🚀🚀</div>
-      <h2 class="cta-title">READY TO JOIN<br/>THE REVOLUTION?</h2>
-      <p class="cta-sub">Become part of the most based community in all of crypto.<br/>1 million holders. We're almost there. Are you in?</p>
-      <a id="join-btn-main" href="#" target="_blank" rel="noopener noreferrer" class="btn-join">
-        🔥 JOIN ANSEM NOW 🔥
+  <!-- ── JOIN CTA ─────────────────────────────────── -->
+  <section id="join" class="section">
+    <div class="cta-inner">
+      <img src="/bullpen-logo.png" alt="Bullpen" class="cta-logo" onerror="this.style.display='none'"/>
+      <h2 class="cta-title">Trade $ANSEM on Bullpen</h2>
+      <p class="cta-sub">Join thousands of holders. Buy, sell, and track $ANSEM through Bullpen — the home of ANSEM trading.</p>
+      <a href="#" id="join-btn-2" target="_blank" rel="noopener" class="btn-cta">
+        Open Bullpen App
+        <i data-lucide="arrow-right" class="btn-icon-right"></i>
       </a>
-      <div class="cta-nfa">NFA · DYOR · This site is purely for entertainment · Do your own research 🤡</div>
+      <p class="cta-nfa">Not financial advice. Do your own research. Past performance does not guarantee future results.</p>
     </div>
   </section>
 
-  <!-- ── FOOTER ──────────────────────────────────────────── -->
+  <!-- ── FOOTER ────────────────────────────────────── -->
   <footer>
-    <p>$ANSEM · Built for fun · Live data powered by DexScreener &amp; CoinGecko · 🚀 To The Moon</p>
-    <p style="font-size:0.7rem;opacity:0.4;margin-top:0.4rem">Not financial advice. This is entertainment only.</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="/bull-logo.png" alt="Bull" class="footer-icon" onerror="this.style.display='none'"/>
+        $ANSEM
+      </div>
+      <div class="footer-links">
+        <a href="#hero">Holders</a>
+        <a href="#calculator">Calculator</a>
+        <a href="#transactions">Activity</a>
+        <a href="#post-gen">Generate Post</a>
+      </div>
+      <div class="footer-right">
+        Data: DexScreener · CoinGecko · Solana
+      </div>
+    </div>
   </footer>
-
-  <!-- Money rain overlay (triggered on big profits) -->
-  <div id="money-rain" class="money-rain hidden"></div>
 
   <script src="app.js"></script>
 </body>
